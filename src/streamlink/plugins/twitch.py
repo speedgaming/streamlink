@@ -209,18 +209,22 @@ class TwitchHLSStream(HLSStream):
 
 
 class UsherService:
-    def __init__(self, session):
+    SUPPORTED_CODECS_DEFAULT = ["h264"]
+
+    def __init__(self, session, supported_codecs = None):
         self.session = session
+        self.supported_codecs = supported_codecs or self.SUPPORTED_CODECS_DEFAULT
 
     def _create_url(self, endpoint, **extra_params):
         url = f"https://usher.ttvnw.net{endpoint}"
         params = {
-            "player": "twitchweb",
+            "platform": "web",
             "p": int(random() * 999999),
             "type": "any",
             "allow_source": "true",
             "allow_audio_only": "true",
-            "allow_spectre": "false",
+            "playlist_includes_framerate": "true",
+            "supported_codecs": ",".join(self.supported_codecs)
         }
         params.update(extra_params)
 
@@ -546,6 +550,27 @@ class TwitchAPI:
     """,
 )
 @pluginargument(
+    "supported-codecs",
+    metavar="CODECS",
+    type="comma_list_filter",
+    type_kwargs={
+        "acceptable": ["h264", "h265", "av1"],
+        "unique": True,
+    },
+    default=["h264"],
+    help="""
+        A comma-separated list of codec names which signals Twitch the client's stream codec preference.
+        Which streams and which codecs are available depends on the specific channel and broadcast.
+
+        Default is "h264".
+
+        Supported codecs are h264, h265 and av1. Set to "h264,h265,av1" to enable all codecs.
+
+        Higher quality streams may only be available by enabling h265 or av1.
+        Lower quality streams which are re-encoded on Twitch's end may still be h264, even if not requested.
+    """,
+)
+@pluginargument(
     "api-header",
     metavar="KEY=VALUE",
     type=keyvalue,
@@ -601,7 +626,7 @@ class Twitch(Plugin):
             self.clip_name = match.get("clip_name")
 
         self.api = TwitchAPI(session=self.session)
-        self.usher = UsherService(session=self.session)
+        self.usher = UsherService(session=self.session, supported_codecs=self.get_option("supported-codecs"))
 
         def method_factory(parent_method):
             def inner():
