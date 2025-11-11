@@ -410,7 +410,7 @@ class TwitchAPI:
     def access_token(self, is_live, channel_or_vod):
         query = self._gql_persisted_query(
             "PlaybackAccessToken",
-            "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712",
+            "ed230aa1e33e07eebb8928504583da78a5173989fadfb1ac94be06a04f3cdbe9",
             isLive=is_live,
             login=channel_or_vod if is_live else "",
             isVod=not is_live,
