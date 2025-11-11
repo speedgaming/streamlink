@@ -261,6 +261,7 @@ class TwitchAPI:
         self.headers.update(**dict(session.get_plugin_option("twitch", "api-header") or []))
         self.access_token_params = dict(session.get_plugin_option("twitch", "access-token-param") or [])
         self.access_token_params.setdefault("playerType", "embed")
+        self.access_token_params.setdefault("platform", "site")
 
     def call(self, data, schema=None, **kwargs):
         res = self.session.http.post(
